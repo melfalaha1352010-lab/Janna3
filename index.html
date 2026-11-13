@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>Janna — A Little Light</title>
+  <style>
+    :root {
+      --bg: #101010;
+      --panel: #1b1b1b;
+      --panel2: #242424;
+      --silver: #c9c9c9;
+      --muted: #929292;
+      --line: #3a3a3a;
+      --white: #f2f2f2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--white);
+      background:
+        radial-gradient(ellipse at 50% 0%, #343434 0%, transparent 48%),
+        linear-gradient(160deg, #171717, #090909 75%);
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      display: grid; place-items: center; padding: 26px 16px;
+    }
+    .wrap { width: min(100%, 760px); text-align: center; }
+    .moon {
+      width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 24px;
+      background: linear-gradient(145deg, #f0f0f0, #858585);
+      box-shadow: 0 0 50px #c9c9c933, 0 0 100px #c9c9c91a;
+      position: relative;
+    }
+    .moon:after {
+      content: ""; position: absolute; width: 68px; height: 68px;
+      border-radius: 50%; background: #171717; top: -7px; right: -15px;
+    }
+    .eyebrow { color: var(--muted); letter-spacing: 4px; font-size: 11px; direction:ltr; }
+    h1 { font-size: clamp(38px, 8vw, 66px); margin: 12px 0 8px; font-weight: 500; letter-spacing: 2px; }
+    .sub { color: #b8b8b8; font-size: 15px; margin: 0 auto 34px; line-height: 1.9; }
+    .count-card {
+      background: linear-gradient(145deg, #252525, #171717);
+      border: 1px solid var(--line); border-radius: 24px;
+      padding: 27px 18px 23px; box-shadow: 0 18px 55px #0008;
+    }
+    .count-title { color: var(--silver); font-size: 14px; margin-bottom: 20px; }
+    .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; direction:ltr; }
+    .unit { background: #111; border: 1px solid #333; border-radius: 15px; padding: 17px 5px 13px; }
+    .num { display:block; font-size: clamp(27px, 6vw, 42px); font-weight: 600; color: #e5e5e5; font-variant-numeric: tabular-nums; }
+    .unit small { display:block; color: #8e8e8e; margin-top: 5px; font-size: 11px; }
+    .date { margin-top: 17px; color: #888; font-size: 12px; letter-spacing: 2px; direction:ltr; }
+    .song-card {
+      margin-top: 20px; border: 1px solid var(--line); background: #1a1a1a;
+      border-radius: 22px; padding: 23px 20px;
+    }
+    .song-icon { font-size: 24px; color: #d0d0d0; margin-bottom: 8px; }
+    .song-title { direction:ltr; font-size: 17px; color: #ededed; margin: 0 0 7px; }
+    .artist { color: #8f8f8f; font-size: 13px; margin-bottom: 18px; }
+    button {
+      border: 0; border-radius: 999px; padding: 12px 24px; cursor: pointer;
+      color: #111; background: linear-gradient(135deg, #ededed, #a6a6a6);
+      font-size: 14px; font-weight: 600; transition: transform .2s, filter .2s;
+    }
+    button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+      filter: grayscale(1);
+      transform: none;
+    }
+    .sudoku-card {
+      margin-top: 20px; border: 1px solid var(--line);
+      background: linear-gradient(145deg, #202020, #151515);
+      border-radius: 22px; padding: 23px 16px;
+      box-shadow: 0 18px 55px #0005;
+    }
+    .sudoku-heading { color: #ededed; font-size: 19px; margin: 0 0 7px; }
+    .sudoku-desc { color: #929292; font-size: 12px; line-height: 1.8; margin: 0 0 17px; }
+    #sudokuGame[hidden] { display:none; }
+    .sudoku-board {
+      width: min(100%, 405px); margin: 0 auto;
+      display: grid; grid-template-columns: repeat(9, 1fr);
+      border: 2px solid #aaa; direction:ltr; background:#111;
+    }
+    .sudoku-cell {
+      min-width:0; aspect-ratio:1; border:0; border-radius:0;
+      border-right:1px solid #444; border-bottom:1px solid #444;
+      padding:0; background:#151515; color:#eee;
+      font-size:clamp(13px, 3.8vw, 19px); font-weight:500;
+      display:grid; place-items:center; cursor:pointer;
+    }
+    .sudoku-cell:nth-child(3n) { border-right:2px solid #aaa; }
+    .sudoku-cell:nth-child(9n) { border-right:0; }
+    .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+    .sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom:2px solid #aaa; }
+    .sudoku-cell:nth-child(n+73) { border-bottom:0; }
+    .sudoku-cell.given { color:#aaa; font-weight:700; background:#202020; }
+    .sudoku-cell.selected { background:#414141; outline:2px solid #eee; outline-offset:-2px; }
+    .sudoku-cell.related { background:#292929; }
+    .sudoku-cell.same-number { background:#454545; color:#fff; }
+    .sudoku-cell.wrong { color:#ff9b9b; }
+    .number-pad {
+      display:grid; grid-template-columns:repeat(9,1fr); gap:5px;
+      width:min(100%,405px); margin:14px auto 0; direction:ltr;
+    }
+    .number-pad button, .sudoku-actions button {
+      padding:10px 2px; border:1px solid #555; background:#292929;
+      color:#eee; border-radius:9px; font-size:14px;
+    }
+    .number-pad button:disabled, .sudoku-actions button:disabled { opacity:.35; }
+    .sudoku-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .sudoku-actions button { padding:10px 14px; }
+    .sudoku-status { min-height:24px; color:#bdbdbd; font-size:12px; margin-top:12px; }
+    @media(max-width:420px) {
+      .sudoku-card { padding:20px 10px; }
+      .number-pad { gap:3px; }
+      .number-pad button { padding:9px 1px; }
+    }
+
+    .locked-content { position:relative; }
+    .lock-notice {
+      margin-top: 14px; padding: 13px 12px; border: 1px solid #444;
+      border-radius: 14px; background: #111; color: #bdbdbd;
+      font-size: 13px; line-height: 1.8;
+    }
+    .lock-notice .lock-symbol { display:block; font-size:22px; margin-bottom:5px; color:#ddd; }
+    .locked-content.is-locked .lock-notice { display:block; }
+    .locked-content:not(.is-locked) .lock-notice { display:none; }
+    .locked-content.is-locked .locked-area { display:none !important; }
+    .locked-content.is-locked button { pointer-events:none; }
+
+    .poem-card {
+      margin-top: 20px; border: 1px solid var(--line);
+      background: linear-gradient(145deg, #222, #151515);
+      border-radius: 22px; padding: 28px 22px;
+      box-shadow: 0 18px 55px #0005;
+    }
+    .poem-kicker { color: #929292; font-size: 11px; letter-spacing: 3px; direction:ltr; }
+    .poem-title { color: #ededed; font-size: 27px; font-weight: 500; margin: 9px 0 20px; }
+    .poem-lines { color: #d4d4d4; font-size: 16px; line-height: 2.15; white-space: pre-line; }
+    .poem-lines p { margin: 0 0 17px; }
+    .poem-lines p:last-child { margin-bottom: 0; }
+    .poem-divider { width: 46px; height: 1px; background: #777; margin: 22px auto; }
+    @media(max-width:420px) { .poem-card { padding:24px 16px; } .poem-lines { font-size:15px; } }
+
+    .footer { color: #686868; font-size: 11px; margin-top: 26px; letter-spacing: 1px; }
+    .modal {
+      position: fixed; inset: 0; background: #000c; display: none;
+      place-items: center; padding: 18px; z-index: 5;
+    }
+    .modal.open { display:grid; }
+    .window {
+      width: min(100%, 620px); background: #1b1b1b; border: 1px solid #555;
+      border-radius: 20px; padding: 16px; box-shadow: 0 25px 90px #000;
+    }
+    .window-head { display:flex; justify-content:space-between; align-items:center; margin-bottom: 13px; color:#d5d5d5; }
+    .close { background:#333; color:#eee; padding:7px 12px; }
+    .video { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; background:#000; }
+    .video iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .direct { display:inline-block; margin-top:13px; color:#cfcfcf; font-size:13px; text-decoration:underline; text-underline-offset:4px; }
+    @media(max-width:420px) { .timer { gap:6px; } .unit { padding:14px 2px 11px; } .num { font-size:27px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="moon" aria-hidden="true"></div>
+    <div class="eyebrow">A LITTLE SOMETHING FOR</div>
+    <h1>Janna</h1>
+    <p class="sub">A little countdown, a little music,<br>and a whole lot of good wishes.</p>
+
+    <section class="count-card" aria-label="Countdown">
+      <div class="count-title">العدّ التنازلي لليوم المنتظر</div>
+      <div class="timer">
+        <div class="unit"><span class="num" id="days">00</span><small>أيام</small></div>
+        <div class="unit"><span class="num" id="hours">00</span><small>ساعات</small></div>
+        <div class="unit"><span class="num" id="minutes">00</span><small>دقائق</small></div>
+        <div class="unit"><span class="num" id="seconds">00</span><small>ثواني</small></div>
+      </div>
+      <div class="date">15 JANUARY 2027</div>
+    </section>
+
+    <section class="poem-card" aria-label="قصيدة جنى">
+      <div class="poem-kicker">A POEM FOR JANNA</div>
+      <h2 class="poem-title">جَنَّى</h2>
+      <div class="poem-divider" aria-hidden="true"></div>
+      <div class="poem-lines">
+        <p>وَمَالِي أَرَى الْحُسْنَ فِي جَنَّى<br>وَكَأَنَّ الْجَمَالَ لَمْ يُخْلَقْ إِلَّا لَهَا</p>
+        <p>فَأَيُّ حُسْنٍ هَذَا الَّذِي أَرَاهُ؟<br>وَأَيُّ سِرٍّ فِي عَيْنَيْهَا أَخْفَاهَا؟</p>
+        <p>وَإِنِّي لَأَعْجَبُ مِنْ فَتَاةٍ<br>يَسْبِقُ فِكْرُهَا عُمْرَهَا بِسِنِينَ</p>
+        <p>تُحَادِثُكَ فَتَظُنُّهَا حَكِيمَةً<br>وَكَأَنَّ الْحَيَاةَ عَلَّمَتْهَا مَا لَمْ تَرَهُ الْعُيُونُ</p>
+        <p>وَمَا كَانَ جَمَالُهَا فِي وَجْهِهَا فَقَطْ<br>بَلْ فِي طِيبِ قَلْبِهَا وَصَفَاءِ سَرِيرَتِهَا</p>
+        <p>فَإِنْ كَانَ الْوَرْدُ يُعْرَفُ بِعِطْرِهِ<br>فَجَنَّى تُعْرَفُ بِطِيبِ رُوحِهَا</p>
+        <p>وَأَمَّا عَيْنَاهَا فَحَدِّثْ وَلَا حَرَجَ<br>فَكَأَنَّ السَّمَاءَ أَوْدَعَتْ نُجُومَهَا فِيهِمَا</p>
+        <p>أَأَنْظُرُ إِلَى عَيْنَيْهَا أَمْ إِلَى سَمَاءٍ؟<br>فَإِنِّي لَا أَرَى فَرْقًا بَيْنَهُمَا</p>
+        <p>وَسُبْحَانَ مَنْ جَمَعَ فِي فَتَاةٍ<br>جَمَالَ الْمَلَامِحِ وَطِيبَ الْخِصَالِ</p>
+        <p>فَلَا الْحُسْنُ وَحْدَهُ أَسَرَنِي<br>وَلَا الْفِكْرُ وَحْدَهُ أَعْجَبَنِي</p>
+        <p>وَلَكِنَّهَا جَمَعَتْ مَا تَفَرَّقَ فِي غَيْرِهَا<br>فَصَارَ لَهَا مِنْ كُلِّ جَمِيلٍ نَصِيبٌ</p>
+        <p>فَيَا جَنَّى، إِنْ كَانَ لِلْجَمَالِ مَقَامٌ<br>فَإِنَّ لِطِيبِ قَلْبِكِ مَقَامًا أَعْلَى</p>
+        <p>وَإِنْ كَانَتِ الْكَلِمَاتُ تَعْجِزُ عَنْ وَصْفِكِ<br>فَحَسْبُكِ أَنَّكِ مِنَ الْجَمَالِ مَعْنًى آخَرُ.</p>
+      </div>
+    </section>
+
+    <section class="song-card locked-content is-locked" id="songSection">
+      <div class="lock-notice"><span class="lock-symbol">🔒</span>الأغنية هتتفتح لما العداد يخلص يوم 15 يناير 2027 ✦</div>
+      <div class="locked-area">
+        <div class="song-icon">♫</div>
+        <h2 class="song-title">There Is a Light That Never Goes Out</h2>
+        <div class="artist">The Smiths</div>
+        <button id="openSong" type="button">افتح شباك الأغنية ♫</button>
+      </div>
+    </section>
+
+    <section class="sudoku-card locked-content is-locked" id="sudokuSection" aria-label="Sudoku game">
+      <h2 class="sudoku-heading">Sudoku ✦</h2>
+      <p class="sudoku-desc">لعبة صغيرة مستنياكي… حلي السودوكو وكمّلي التحدي على مهلك.</p>
+      <div class="lock-notice"><span class="lock-symbol">🔒</span>لعبة السودوكو هتتفتح بعد انتهاء العدّ التنازلي ✦</div>
+      <div class="locked-area" id="sudokuGame">
+        <div class="sudoku-board" id="sudokuBoard" role="group" aria-label="Sudoku grid"></div>
+        <div class="number-pad" id="numberPad" aria-label="Choose a number"></div>
+        <div class="sudoku-actions">
+          <button type="button" id="eraseCell">مسح الخانة</button>
+          <button type="button" id="checkSudoku">تحقق من الحل</button>
+          <button type="button" id="resetSudoku">إعادة اللعبة</button>
+        </div>
+        <div class="sudoku-status" id="sudokuStatus" aria-live="polite">اختاري خانة فاضية، وبعدها اختاري رقم.</div>
+      </div>
+    </section>
+
+    <div class="footer">MADE WITH GOOD VIBES · J</div>
+  </main>
+
+  <div class="modal" id="songModal" role="dialog" aria-modal="true" aria-label="Song player">
+    <div class="window">
+      <div class="window-head">
+        <span>♫ &nbsp; Now playing</span>
+        <button class="close" id="closeSong" type="button">إغلاق ✕</button>
+      </div>
+      <div class="video">
+        <iframe id="player" title="The Smiths - There Is A Light That Never Goes Out"
+          src="about:blank" data-src="https://www.youtube-nocookie.com/embed/siO6dkqidc4?autoplay=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <a class="direct" href="https://www.youtube.com/watch?v=siO6dkqidc4" target="_blank" rel="noopener noreferrer">فتح الأغنية مباشرة على YouTube</a>
+    </div>
+  </div>
+
+  <script>
+    // Countdown uses Kuwait local time (UTC+3).
+    const target = new Date("2027-01-15T00:00:00+03:00").getTime();
+    const ids = ["days", "hours", "minutes", "seconds"];
+    function updateCountdown() {
+      let diff = Math.max(0, target - Date.now());
+      const values = [
+        Math.floor(diff / 86400000),
+        Math.floor((diff % 86400000) / 3600000),
+        Math.floor((diff % 3600000) / 60000),
+        Math.floor((diff % 60000) / 1000)
+      ];
+      ids.forEach((id, i) => document.getElementById(id).textContent = String(values[i]).padStart(2, "0"));
+      if (diff === 0) {
+        document.querySelector(".count-title").textContent = "وصل اليوم المنتظر ✦";
+        document.getElementById("songSection").classList.remove("is-locked");
+        document.getElementById("sudokuSection").classList.remove("is-locked");
+      }
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+
+    const sudokuPuzzle = [
+      [5,3,0,0,7,0,0,0,0],
+      [6,0,0,1,9,5,0,0,0],
+      [0,9,8,0,0,0,0,6,0],
+      [8,0,0,0,6,0,0,0,3],
+      [4,0,0,8,0,3,0,0,1],
+      [7,0,0,0,2,0,0,0,6],
+      [0,6,0,0,0,0,2,8,0],
+      [0,0,0,4,1,9,0,0,5],
+      [0,0,0,0,8,0,0,7,9]
+    ];
+    const sudokuSolution = [
+      [5,3,4,6,7,8,9,1,2],
+      [6,7,2,1,9,5,3,4,8],
+      [1,9,8,3,4,2,5,6,7],
+      [8,5,9,7,6,1,4,2,3],
+      [4,2,6,8,5,3,7,9,1],
+      [7,1,3,9,2,4,8,5,6],
+      [9,6,1,5,3,7,2,8,4],
+      [2,8,7,4,1,9,6,3,5],
+      [3,4,5,2,8,6,1,7,9]
+    ];
+    let sudokuValues = sudokuPuzzle.map(row => row.slice());
+    let selectedCell = null;
+
+    const board = document.getElementById("sudokuBoard");
+    const numberPad = document.getElementById("numberPad");
+    const sudokuStatus = document.getElementById("sudokuStatus");
+
+    function renderSudoku() {
+      board.innerHTML = "";
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const value = sudokuValues[r][c];
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "sudoku-cell";
+          cell.textContent = value || "";
+          cell.setAttribute("aria-label", `صف ${r + 1}، عمود ${c + 1}${value ? `، ${value}` : "، فارغ"}`);
+          if (sudokuPuzzle[r][c] !== 0) {
+            cell.classList.add("given");
+            cell.disabled = true;
+          } else {
+            cell.addEventListener("click", () => {
+              selectedCell = [r, c];
+              renderSudoku();
+            });
+          }
+          if (selectedCell) {
+            const [sr, sc] = selectedCell;
+            if (r === sr && c === sc) cell.classList.add("selected");
+            else if (r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3))) cell.classList.add("related");
+            if (value && value === sudokuValues[sr][sc]) cell.classList.add("same-number");
+          }
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function setSudokuNumber(number) {
+      if (!selectedCell) {
+        sudokuStatus.textContent = "اختاري خانة فاضية الأول.";
+        return;
+      }
+      const [r, c] = selectedCell;
+      if (sudokuPuzzle[r][c] !== 0) return;
+      sudokuValues[r][c] = number;
+      sudokuStatus.textContent = "كمّلي براحتك ✦";
+      renderSudoku();
+    }
+
+    for (let n = 1; n <= 9; n++) {
+      const key = document.createElement("button");
+      key.type = "button";
+      key.textContent = n;
+      key.addEventListener("click", () => setSudokuNumber(n));
+      numberPad.appendChild(key);
+    }
+
+    document.getElementById("eraseCell").addEventListener("click", () => {
+      if (!selectedCell) {
+        sudokuStatus.textContent = "اختاري الخانة اللي عايزة تمسحيها.";
+        return;
+      }
+      const [r, c] = selectedCell;
+      if (sudokuPuzzle[r][c] === 0) {
+        sudokuValues[r][c] = 0;
+        renderSudoku();
+      }
+    });
+
+    document.getElementById("checkSudoku").addEventListener("click", () => {
+      let empty = 0, wrong = 0;
+      for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+        if (sudokuValues[r][c] === 0) empty++;
+        else if (sudokuValues[r][c] !== sudokuSolution[r][c]) wrong++;
+      }
+      if (empty === 0 && wrong === 0) {
+        sudokuStatus.textContent = "برافو! حلّيتي السودوكو كلها صح ✨";
+      } else if (wrong > 0) {
+        sudokuStatus.textContent = `فيه ${wrong} خانة محتاجة مراجعة. كمّلي المحاولة!`;
+      } else {
+        sudokuStatus.textContent = `فاضل ${empty} خانات. إنتِ قربتي!`;
+      }
+    });
+
+    document.getElementById("resetSudoku").addEventListener("click", () => {
+      sudokuValues = sudokuPuzzle.map(row => row.slice());
+      selectedCell = null;
+      sudokuStatus.textContent = "بدأنا من جديد. بالتوفيق ✦";
+      renderSudoku();
+    });
+
+    renderSudoku();
+
+    const modal = document.getElementById("songModal");
+    const player = document.getElementById("player");
+    document.getElementById("openSong").addEventListener("click", () => {
+      modal.classList.add("open");
+      player.src = player.dataset.src;
+    });
+    function closeModal() {
+      modal.classList.remove("open");
+      player.src = "about:blank";
+    }
+    document.getElementById("closeSong").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+  </script>
+</body>
+</html>
